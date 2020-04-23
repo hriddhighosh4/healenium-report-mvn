@@ -1,5 +1,5 @@
 ### 0. Add dependency to repo
-c
+```xml
     <pluginRepositories>
         <pluginRepository>
             <id>bintray-healenium</id>
@@ -7,6 +7,7 @@ c
         </pluginRepository>
     </pluginRepositories>
 ```
+
 ### 1. Configure plugin 
 ```xml
     <build>
