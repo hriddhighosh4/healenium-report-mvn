@@ -42,7 +42,7 @@ buildReport goal will generate link to the healing report after test run
 
 ### 2. Run tests 
 ```
-mvn clean test -X
+mvn clean test
 ```
 
 Report link will be available in console like
