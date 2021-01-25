@@ -4,8 +4,6 @@ import com.epam.healenium.client.HealingClient;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -22,7 +20,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import static com.epam.healenium.extension.ReportHelper.*;
+import static com.epam.healenium.extension.ReportHelper.loadConfig;
 
 @Mojo(name = "initReport", defaultPhase = LifecyclePhase.TEST)
 public class InitReportMojo extends AbstractMojo {
@@ -36,11 +34,11 @@ public class InitReportMojo extends AbstractMojo {
     }
 
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() {
         Model model = project.getModel();
         Build build = model.getBuild();
         String targetDir = build.getDirectory() + "/classes";
-        String sourceDir = project.getBasedir().getName() + "/src/test/resources";
+        String sourceDir = project.getBasedir().getPath() + "/src/test/resources";
 
         findConfig(targetDir, sourceDir).ifPresent(it -> {
             try {
@@ -49,7 +47,7 @@ public class InitReportMojo extends AbstractMojo {
                 normalizeProperties(configProperty);
 
                 //build remote
-                String serverHost = configProperty.getProperty( "serverHost", "localhost");
+                String serverHost = configProperty.getProperty("serverHost", "localhost");
                 Integer serverPort = stringToInteger(configProperty.getProperty("serverPort", "7878"));
                 getLog().info("Healenium server Port = " + serverPort);
                 getLog().info("Healenium server Host = " + serverHost);
@@ -78,29 +76,29 @@ public class InitReportMojo extends AbstractMojo {
         Optional<String> result = Optional.empty();
         try (Stream<Path> walk = Files.walk(Paths.get(targetDir.toString()))) {
             result = walk.filter(Files::isRegularFile)
-                .map(Path::toString)
-                .filter(it -> it.endsWith(configFile))
-                .findFirst();
+                    .map(Path::toString)
+                    .filter(it -> it.endsWith(configFile))
+                    .findFirst();
         } catch (Exception ex) {
             // no logging
         }
         File file = result.map(File::new)
-            .orElseGet(() -> {
-                Path fromPath = Paths.get(String.valueOf(sourceDir), configFile);
-                Path toPath = Paths.get(String.valueOf(targetDir), configFile);
-                try {
-                    Files.createDirectories(toPath.getParent());
-                    if (Files.exists(Paths.get(sourceDir + configFile))) {
-                        Files.copy(fromPath, toPath, StandardCopyOption.REPLACE_EXISTING);
-                    } else {
-                        Files.createFile(toPath);
+                .orElseGet(() -> {
+                    Path fromPath = Paths.get(String.valueOf(sourceDir), configFile);
+                    Path toPath = Paths.get(String.valueOf(targetDir), configFile);
+                    try {
+                        Files.createDirectories(toPath.getParent());
+                        if (Files.exists(Paths.get(sourceDir + configFile))) {
+                            Files.copy(fromPath, toPath, StandardCopyOption.REPLACE_EXISTING);
+                        } else {
+                            Files.createFile(toPath);
+                        }
+                        return Paths.get(targetDir + configFile).toFile();
+                    } catch (IOException ex) {
+                        getLog().error("Failed to create config file", ex);
+                        return null;
                     }
-                    return Paths.get(targetDir + configFile).toFile();
-                } catch (IOException ex) {
-                    getLog().error("Failed to create config file", ex);
-                    return null;
-                }
-            });
+                });
         return Optional.ofNullable(file);
     }
 
