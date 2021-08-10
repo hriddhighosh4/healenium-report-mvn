@@ -1,13 +1,3 @@
-### 0. Add dependency to repo
-```xml
-    <pluginRepositories>
-        <pluginRepository>
-            <id>bintray-healenium</id>
-            <url>http://dl.bintray.com/epam/healenium</url>
-        </pluginRepository>
-    </pluginRepositories>
-```
-
 ### 1. Configure plugin 
 ```xml
     <build>
